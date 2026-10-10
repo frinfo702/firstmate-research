@@ -1465,6 +1465,29 @@ test_crewmate_scaffolds_forbid_pool_administration() {
   pass "fm-brief.sh: every crewmate scaffold forbids administering the shared worktree pool"
 }
 
+# Every ship and scout worker must stay on its one problem and hand any other
+# discovered problem back as a follow-up instead of fixing it in passing.
+test_crewmate_scaffolds_carry_rule_of_one() {
+  local home id brief args
+  home="$TMP_ROOT/rule-of-one-home"
+  mkdir -p "$home/data"
+
+  for args in "--mode no-mistakes" "--mode direct-PR" "--mode local-only" "--scout"; do
+    id="brief-one-${args##* }"
+    # shellcheck disable=SC2086 # Each entry is a flag plus its value.
+    FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "$id" alpha $args >/dev/null 2>&1 \
+      || fail "fm-brief.sh $args exited non-zero"
+    brief="$home/data/$id/brief.md"
+    assert_grep "8. Rule of One: this task has exactly one problem or hypothesis" "$brief" \
+      "$args brief did not state the Rule of One"
+    assert_grep "do not fix, test, or investigate it in passing" "$brief" \
+      "$args brief did not forbid fixing another problem in passing"
+    assert_grep "report it as a suggested follow-up" "$brief" \
+      "$args brief did not route another problem to a follow-up"
+  done
+  pass "fm-brief.sh: every ship and scout scaffold carries the Rule of One"
+}
+
 test_script_parses
 test_no_heredoc_in_command_substitution
 test_help_includes_entire_header
@@ -1502,3 +1525,4 @@ test_branch_prefix_is_refused_where_it_does_not_apply
 test_branch_prefix_value_is_validated
 test_branch_prefix_command_is_shell_safe
 test_crewmate_scaffolds_forbid_pool_administration
+test_crewmate_scaffolds_carry_rule_of_one

@@ -586,6 +586,15 @@ IFS= read -r -d '' SHARED_INFRA_RULE <<'EOF' || true
 EOF
 SHARED_INFRA_RULE=${SHARED_INFRA_RULE%$'\n'}
 
+# One shared string keeps the ship and scout Rule of One identical;
+# .agents/skills/rule-of-one/SKILL.md owns the principle.
+IFS= read -r -d '' RULE_OF_ONE <<'EOF' || true
+8. Rule of One: this task has exactly one problem or hypothesis, named under `# Task`; do only what solves that problem or tests that hypothesis.
+   When you discover any other problem along the way, do not fix, test, or investigate it in passing; report it as a suggested follow-up in your `done:` summary or report, and firstmate files it as its own backlog item.
+   If that other problem blocks the task outright, append `blocked [at=<epoch>]: {the problem}` instead of fixing it.
+EOF
+RULE_OF_ONE=${RULE_OF_ONE%$'\n'}
+
 if [ -n "$BASE_BRANCH" ]; then
   SETUP_BASE="You are in a disposable git worktree of $REPO, at a detached HEAD on a clean copy of its base branch.
 Base branch: $BASE_BRANCH"
@@ -633,6 +642,7 @@ $CREWMATE_PAUSE_INSTRUCTIONS
    A decision or blocker you opened stays open until a \`resolved\` line carrying its exact key lands; a later \`done:\` or \`working:\` line never closes it, even when the answer is what started that work.
    Firstmate's reply normally writes that closing line at answer time; when a blocker or wait clears WITHOUT a firstmate reply, append \`resolved [at=<epoch>]: {how it cleared}\` yourself (same \`[key=<slug>]\` if you opened it with one) as you resume.
 $SHARED_INFRA_RULE
+$RULE_OF_ONE
 
 $WAIT_BLOCK$INBOX_SECTION
 
@@ -713,6 +723,7 @@ $ASK_USER_BLOCK
    A decision or blocker you opened stays open until a \`resolved\` line carrying its exact key lands; a later \`done:\` or \`working:\` line never closes it, even when the answer is what started that work.
    Firstmate's reply normally writes that closing line at answer time; when a blocker or wait clears WITHOUT a firstmate reply, append \`resolved [at=<epoch>]: {how it cleared}\` yourself (same \`[key=<slug>]\` if you opened it with one) as you resume.
 $SHARED_INFRA_RULE
+$RULE_OF_ONE
 
 $WAIT_BLOCK$INBOX_SECTION
 
