@@ -1,0 +1,60 @@
+
+===== S1 registry: a project registered [experiment] resolves as itself =====
+$ /Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/bin/fm-project-mode.sh expproj
+experiment off
+[exit 0]
+
+===== S2 brief: --mode experiment scaffolds a push-only, no-PR, no-pipeline contract =====
+$ /Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/bin/fm-brief.sh exp-live-a1 expproj --mode experiment
+scaffolded: /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-lab.dQTeRl/data/exp-live-a1/brief.md (ship, mode=experiment; replace {TASK} and {FIRSTMATE_SPEC})
+[exit 0]
+--- rule 1 + Definition of done section of /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-lab.dQTeRl/data/exp-live-a1/brief.md:
+25:1. Never push to the default branch (push only your `fm/exp-live-a1` branch). Never open or merge a PR.
+# Definition of done
+Delivery contract: mode=experiment
+Ship branch: fm/exp-live-a1
+This task ships **experiment**: it ends at a pushed experiment branch and a concluded experiment record, never at a PR or a merge.
+Load the `experiment-run` skill before you launch, wait on, or conclude any run; if that name does not resolve in this session, read `/Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/.agents/skills/experiment-run/SKILL.md` instead.
+The task is complete only when committed on your branch `fm/exp-live-a1` and pushed with `git push -u origin fm/exp-live-a1`. Do NOT open a PR, do NOT merge, and do NOT run /no-mistakes.
+When the experiment record holds its conclusion and your latest commit is pushed, append `done [at=<epoch>]: pushed experiment branch fm/exp-live-a1` to the status file and stop.
+That `done:` is accepted only when this copy's HEAD - your latest commit - is on a remote-tracking branch; the check tests that commit, not merely that a branch moved.
+Nothing merges, so no merge authority applies: firstmate relays the conclusion and cleans up, and the pushed branch stays as the experiment's reference.
+--- PR/pipeline wording present? (expect none):
+(none)
+
+===== S3 adversarial: experiment + gerrit forge is refused =====
+$ /Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/bin/fm-brief.sh exp-live-a2 expproj --mode experiment --forge gerrit
+error: fm-brief.sh --forge: forge=gerrit cannot ship mode=experiment - that mode pushes a plain branch with git, which a worker never does to a review server; ship no-mistakes or direct-PR, which publish through the forge
+[exit 1]
+
+===== S3b adversarial: unknown mode still refused with experiment in the closed set =====
+$ /Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/bin/fm-brief.sh exp-live-a3 expproj --mode experimental
+error: --mode must be one of no-mistakes, direct-PR, local-only, experiment (got 'experimental')
+[exit 1]
+
+===== S4 teardown: unpushed experiment branch refused, pushed one cleaned with no PR/merge; detached job outside worktree survives, job inside worktree is reaped =====
+--- S4a teardown with the experiment branch NOT pushed:
+REFUSED: worktree /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-exp-scratch.H12lNC/wt has work not on any remote and not landed.
+unpushed commits:
+2513642 experiment config
+Push the branch, land its PR, or get the captain's explicit OK to discard, then --force.
+[exit 1]
+worktree still present: yes
+--- push the branch per the DoD (git push -u origin fm/exp-x1), launch two detached jobs per experiment-run
+outside-worktree job alive before: yes
+inside-worktree job alive before:  yes
+--- S4b teardown with the experiment branch pushed:
+$ /Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K46V1MRAYM5TF0WW8F8K3V/bin/fm-teardown.sh exp-x1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-lab.dQTeRl
+teardown: reaping leaked worktree process(es) for exp-x1: 75475
+/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-exp-scratch.H12lNC/project: already current
+teardown exp-x1 complete (window firstmate:fm-exp-x1, worktree /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T//fm-exp-scratch.H12lNC/wt)
+Backlog: exp-x1 is closed in /private/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/fm-lab.dQTeRl/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+[exit 0]
+worktree removed: no
+backlog row state: done
+origin still has fm/exp-x1: yes
+origin main unchanged (no merge): 1 commit(s) on main
+outside-worktree job alive after: yes
+inside-worktree job alive after:  no
+run dir outside worktree survives: yes
