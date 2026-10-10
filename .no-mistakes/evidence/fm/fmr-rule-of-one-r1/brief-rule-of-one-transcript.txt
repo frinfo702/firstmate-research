@@ -1,0 +1,45 @@
+rc=0 --mode no-mistakes
+rc=0 --mode direct-PR
+rc=0 --mode local-only
+rc=0 --scout
+--- numbered rules (ship no-mistakes):
+22:1. First action: create your branch: `git checkout -b fm/ro-mistakes --`
+23:2. Run `no-mistakes doctor`; if it reports the repo is not initialized here, run `no-mistakes init`.
+26:1. Never push to the default branch. Never merge a PR.
+27:2. Keep project edits inside this worktree; keep proof and scratch output outside it, under `/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/tmp.uXz6fpjzc8/data/ro-mistakes/` or a temporary directory.
+30:3. Use gh-axi for GitHub operations and chrome-devtools-axi for browser operations.
+31:4. Report status by appending one line:
+53:5. If you hit the same obstacle twice, append `blocked [at=<epoch>]: {why}` and stop; firstmate will help.
+54:6. If a decision belongs above the implementation worker (product choices, destructive actions),
+61:7. Never administer infrastructure that every lane shares. Two things are shared:
+83:8. Rule of One: this task has exactly one problem or hypothesis, named under `# Task`; do only what solves that problem or tests that hypothesis.
+--- numbered rules (scout):
+22:1. Never push to any remote and never open a PR.
+23:2. Stay inside this worktree; the only files you may write outside it are the report and the status file below.
+24:3. Use gh-axi for GitHub operations and chrome-devtools-axi for browser operations.
+25:4. Report status by appending one line:
+44:5. If you hit the same obstacle twice, append `blocked [at=<epoch>]: {why}` and stop; firstmate will help.
+45:6. If a decision belongs to a human (product choices, destructive actions),
+49:7. Never administer infrastructure that every lane shares. Two things are shared:
+71:8. Rule of One: this task has exactly one problem or hypothesis, named under `# Task`; do only what solves that problem or tests that hypothesis.
+--- scout Rule of One block:
+69-   If you genuinely need a second checkout, another slot, or the daemon touched, append
+70-   `blocked [at=<epoch>]: {what you need}` and stop; firstmate arranges it.
+71:8. Rule of One: this task has exactly one problem or hypothesis, named under `# Task`; do only what solves that problem or tests that hypothesis.
+72-   When you discover any other problem along the way, do not fix, test, or investigate it in passing; report it as a suggested follow-up in your `done:` summary or report, and firstmate files it as its own backlog item.
+73-   If that other problem blocks the task outright, append `blocked [at=<epoch>]: {the problem}` instead of fixing it.
+74-
+75-# Firstmate instruction inbox
+--- counts:
+/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/tmp.uXz6fpjzc8/data/ro-PR/brief.md:1
+/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/tmp.uXz6fpjzc8/data/ro-mistakes/brief.md:1
+/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/tmp.uXz6fpjzc8/data/ro-only/brief.md:1
+/var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/tmp.uXz6fpjzc8/data/ro-scout/brief.md:1
+--- Task section (ship):
+3:# Task
+4-## Captain's intent
+5-{TASK}
+6-
+7-## Firstmate spec
+8-{FIRSTMATE_SPEC}
+9-
