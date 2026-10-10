@@ -6,7 +6,7 @@
 # receives. Both paths must hand the worker the same contract: a promoted
 # no-mistakes worker that never received the ask-user escalation rule or the
 # `--yes` ban is the exact delivery hole this single owner exists to close.
-# fm_dod_block <no-mistakes|direct-PR|local-only> <task-id> [branch] [<forge>]
+# fm_dod_block <no-mistakes|direct-PR|local-only|experiment> <task-id> [branch] [<forge>]
 # prints the block on stdout with no trailing blank line. The caller validates the
 # mode; an unknown mode is refused rather than silently rendered as the pipeline
 # contract.
@@ -51,7 +51,8 @@
 # what the registry binding means, and this file owns what gerrit changes for a
 # WORKER (docs/gerrit-forge-integration.md is the design). A forge composes with
 # the two modes that publish and is refused on local-only, which publishes
-# nothing. On gerrit the worker publishes one squashed change with
+# nothing, and on experiment, which pushes a plain branch with git. On gerrit
+# the worker publishes one squashed change with
 # `gerrit-axi publish --squash` instead of opening a pull request: direct-PR does
 # that straight away, and no-mistakes first runs the pipeline with its three
 # forge-facing steps skipped and recovers the pipeline's own fix commits into its
@@ -148,6 +149,10 @@ fm_forge_valid_for_mode() {  # <forge> <mode> <caller>
     echo "error: $caller: forge=$forge cannot ship mode=local-only - that mode publishes nothing, so a forge has no meaning there, and its landing would fast-forward local main with content the review server has never seen; ship no-mistakes or direct-PR, which publish through the forge" >&2
     return 1
   fi
+  if [ "$forge" != none ] && [ "$mode" = experiment ]; then
+    echo "error: $caller: forge=$forge cannot ship mode=experiment - that mode pushes a plain branch with git, which a worker never does to a review server; ship no-mistakes or direct-PR, which publish through the forge" >&2
+    return 1
+  fi
   return 0
 }
 
@@ -188,7 +193,7 @@ fm_brief_base_branches() {  # <brief>
   ' "$1"
 }
 
-fm_ship_rule_one() {  # <no-mistakes|direct-PR|local-only> <task-id> [branch] [<forge>] [<base>]
+fm_ship_rule_one() {  # <no-mistakes|direct-PR|local-only|experiment> <task-id> [branch] [<forge>] [<base>]
   local mode=$1 id=$2 forge=${4:-none} base=${5:-}
   local branch=${3:-fm/$id} target='the default branch'
   fm_forge_valid_for_mode "$forge" "$mode" fm_ship_rule_one || return 1
@@ -204,6 +209,9 @@ fm_ship_rule_one() {  # <no-mistakes|direct-PR|local-only> <task-id> [branch] [<
       ;;
     local-only)
       printf '%s\n' "1. Never push to any remote and never open a PR. Work only on your \`$branch\` branch; firstmate handles the merge into local \`main\`."
+      ;;
+    experiment)
+      printf '%s\n' "1. Never push to $target (push only your \`$branch\` branch). Never open or merge a PR."
       ;;
     no-mistakes)
       printf '%s\n' "1. Never push to $target. Never merge a PR."
@@ -402,7 +410,7 @@ EOF
 
 fm_dod_block() {  # <mode> <task-id> [branch] [<forge>] [<base>]
   local mode=$1 id=$2 forge=${4:-none} base=${5:-}
-  local branch=${3:-fm/$id} pr_base='' nm_base='' base_q
+  local branch=${3:-fm/$id} pr_base='' nm_base='' base_q skill
   fm_forge_valid_for_mode "$forge" "$mode" fm_dod_block || return 1
   fm_base_branch_valid "$base" "$mode" "$forge" fm_dod_block || return 1
   if [ -n "$base" ]; then
@@ -488,6 +496,20 @@ When it is implemented and committed, append \`done [at=<epoch>]: ready in branc
 The configured merge authority approves the ready branch, then firstmate merges it into local \`main\` through the guarded fast-forward path.
 EOF
       ;;
+    experiment:*)
+      skill="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.agents/skills/experiment-run/SKILL.md"
+      cat <<EOF
+# Definition of done
+Delivery contract: mode=experiment
+Ship branch: $branch
+This task ships **experiment**: it ends at a pushed experiment branch and a concluded experiment record, never at a PR or a merge.
+Load the \`experiment-run\` skill before you launch, wait on, or conclude any run; if that name does not resolve in this session, read \`$skill\` instead.
+The task is complete only when committed on your branch \`$branch\` and pushed with \`git push -u origin $branch\`. Do NOT open a PR, do NOT merge, and do NOT run /no-mistakes.
+When the experiment record holds its conclusion and your latest commit is pushed, append \`done [at=<epoch>]: pushed experiment branch $branch\` to the status file and stop.
+That \`done:\` is accepted only when this copy's HEAD - your latest commit - is on a remote-tracking branch; the check tests that commit, not merely that a branch moved.
+Nothing merges, so no merge authority applies: firstmate relays the conclusion and cleans up, and the pushed branch stays as the experiment's reference.
+EOF
+      ;;
     no-mistakes:*)
       cat <<EOF
 # Definition of done
@@ -555,7 +577,7 @@ fm_dod_should_gate_ship_done() {  # <kind> <mode> <line>
   [ "$(status_line_verb "$3")" = "done" ] || return 1
   note=$(status_line_note "$3")
   case "$2" in
-    direct-PR|local-only) return 0 ;;
+    direct-PR|local-only|experiment) return 0 ;;
     no-mistakes|'')
       fm_dod_note_reports_ci_ready "$note" || fm_dod_note_reports_published_change "$note" ;;
     *) return 1 ;;

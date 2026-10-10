@@ -92,7 +92,7 @@ EOF
 missing both flags||ship spawns require --mode
 missing --yolo|--mode no-mistakes|ship spawns require --yolo
 missing --mode|--yolo off|ship spawns require --mode
-unknown mode|--mode nope --yolo off|must be one of no-mistakes, direct-PR, local-only
+unknown mode|--mode nope --yolo off|must be one of no-mistakes, direct-PR, local-only, experiment
 unknown yolo|--mode no-mistakes --yolo maybe|--yolo must be on or off
 conditional policy as a task mode|--mode no-mistakes-prod-only --yolo off|classify this task's surface
 ROWS
@@ -188,6 +188,8 @@ no-mistakes project shipped direct-PR|- proj [no-mistakes] - fixture (added 2026
 no-mistakes project shipped local-only|- proj [no-mistakes] - fixture (added 2026-01-01)|local-only|notice|no-mistakes
 no-mistakes project shipped no-mistakes|- proj [no-mistakes] - fixture (added 2026-01-01)|no-mistakes|quiet|no-mistakes
 local-only project shipped no-mistakes|- proj [local-only] - fixture (added 2026-01-01)|no-mistakes|quiet|local-only
+no-mistakes project shipped experiment|- proj [no-mistakes] - fixture (added 2026-01-01)|experiment|notice|no-mistakes
+experiment project shipped no-mistakes|- proj [experiment] - fixture (added 2026-01-01)|no-mistakes|quiet|experiment
 conditional policy shipped direct-PR|- proj [no-mistakes-prod-only] - fixture (added 2026-01-01)|direct-PR|quiet|no-mistakes-prod-only
 unregistered project resolves to the no-mistakes standing default|- other [no-mistakes] - fixture (added 2026-01-01)|direct-PR|notice|no-mistakes
 ROWS
@@ -319,7 +321,7 @@ printf '%s' "$2" > "$FM_TEST_CAPTURE"
 STUB
   chmod +x "$sendroot/bin/fm-send.sh"
 
-  for mode in no-mistakes direct-PR local-only; do
+  for mode in no-mistakes direct-PR local-only experiment; do
     id="promote-dod-$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
     meta="$home/state/$id.meta"
     printf 'window=fm-%s\nkind=scout\nworktree=/tmp/wt\n' "$id" > "$meta"
@@ -408,6 +410,10 @@ STUB
     "promoted local-only worker lost its no-remote contract"
   assert_no_grep "no-mistakes axi respond" "$TMP_ROOT/promote-dod/payload-promote-dod-direct-pr" \
     "promoted direct-PR worker received the pipeline gate contract"
+  payload="$TMP_ROOT/promote-dod/payload-promote-dod-experiment"
+  assert_grep "done [at=<epoch>]: pushed experiment branch fm/promote-dod-experiment" "$payload" \
+    "promoted experiment worker lost its pushed-branch done line"
+  assert_grep "do NOT run /no-mistakes" "$payload" "promoted experiment worker lost its no-pipeline contract"
   pass "fm-promote: a promoted worker receives the same mode-specific delivery contract a briefed one does"
 }
 
@@ -545,7 +551,13 @@ test_project_mode_maps_the_conditional_policy() {
 - yoloproj [no-mistakes-prod-only +yolo] - fixture (added 2026-01-01)
 - flatproj [direct-PR] - fixture (added 2026-01-01)
 - typoproj [no-mistakez] - fixture (added 2026-01-01)
+- expproj [experiment] - fixture (added 2026-01-01)
 EOF
+  out=$(FM_HOME="$home" "$PROJECT_MODE" expproj 2>/dev/null)
+  [ "$out" = "experiment off" ] || fail "a registered experiment mode did not resolve as itself (got '$out')"
+  err=$(FM_HOME="$home" "$PROJECT_MODE" expproj 2>&1 >/dev/null)
+  [ -z "$err" ] || fail "a registered experiment mode still warned as unknown: $err"
+
   out=$(FM_HOME="$home" "$PROJECT_MODE" prodproj 2>/dev/null)
   [ "$out" = "no-mistakes off" ] || fail "conditional policy did not map to its most rigorous leg (got '$out')"
   err=$(FM_HOME="$home" "$PROJECT_MODE" prodproj 2>&1 >/dev/null)
