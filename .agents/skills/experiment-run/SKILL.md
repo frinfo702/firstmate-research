@@ -16,7 +16,7 @@ An experiment task ends at a pushed branch and a concluded record, never at a PR
 
 ## One hypothesis
 
-Each experiment tests exactly one hypothesis.
+Each experiment tests exactly one hypothesis; `.agents/skills/rule-of-one/SKILL.md` owns that rule.
 Any other problem you find mid-experiment - a bug, a weak baseline, a second idea - goes into the record's follow-ups as a new issue, never into a fix on this branch.
 
 ## The experiment record
