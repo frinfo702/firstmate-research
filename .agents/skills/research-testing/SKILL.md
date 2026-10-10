@@ -49,3 +49,12 @@ Write new tests only for the deterministic contracts the new code actually has.
 
 Google's ML Test Score lists 28 tests and monitoring items for production ML readiness.
 It may be consulted as an optional checklist for picking a few relevant items, never as a requirement for research code.
+
+## Project guidance for review and test agents
+
+A research project's own no-mistakes review and test agents see this policy only through that project's own `AGENTS.md`.
+A human adds it there deliberately, as this exact one-line pointer:
+
+> Testing follows the research-testing policy: test only hand-written deterministic logic with small fixed inputs; stochastic outcomes are validated as experiments, not unit tests.
+
+Firstmate and workers never add or edit that line themselves.

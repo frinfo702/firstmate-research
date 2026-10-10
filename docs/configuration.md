@@ -979,6 +979,7 @@ The text is static and never executed or expanded; secondmate charters never tak
 `bin/fm-brief.sh`'s header owns the placement rule and its safety argument.
 
 A research home can copy the tracked template [`docs/examples/brief-include.research.md`](examples/brief-include.research.md) to `config/brief-include.md` so every worker brief points at the `research-testing` skill's testing policy.
+That include reaches workers only; the research project's own no-mistakes review and test agents see the policy only through that project's `AGENTS.md`, where a human deliberately adds the one-line pointer given in the template, and Firstmate and workers never add it themselves.
 
 ## Worker launch environment (config/launch-env-allowlist)
 
