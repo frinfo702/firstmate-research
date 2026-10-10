@@ -1,0 +1,31 @@
+**Skill resolution:** `research-testing` did not resolve by name. It isn't in my skill list, so I read the fallback file `/Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K3BKCHE052HB5828BMDMFD/.agents/skills/research-testing/SKILL.md`. I also read `loss.py` and `train.py`. I edited no files.
+
+Current code: `weighted_mse(pred, target, w) = sum(w·(pred−target)²) / sum(w)`. There is no `tests/` directory and no `AGENTS.md`.
+
+### Tests I would write (one small `test_loss.py`, plain asserts)
+
+| # | Test | Fixed input | Expected |
+|---|---|---|---|
+| 1 | Checks the fixed normalization against a value worked out by hand | `pred=[1,2,3]`, `target=[0,2,5]`, `w=[1,1,2]` | squared errors `[1,0,4]`, weighted sum `9`, divided by `sum(w)=4`: **2.25** (dividing by n would give 3.0) |
+| 2 | Scaling all weights doesn't change the loss (the property the bug broke) | same as #1 with `w=[2,2,4]` | **2.25** |
+| 3 | Uniform weights give plain MSE | `pred=[1,2,3]`, `target=[0,2,5]`, `w=[1,1,1]` | **5/3 ≈ 1.6667** |
+| 4 | A zero-weight element is ignored | `pred=[1,9]`, `target=[0,0]`, `w=[1,0]` | **1.0** (the 81 error drops out) |
+
+Compare with `pytest.approx` or `math.isclose`. No seeds are needed because everything is deterministic.
+
+### Tests I would not write
+- **Final val accuracy ≈ 0.82**: it's a stochastic outcome. Validate it as an experiment with the config and result recorded, not as a unit test.
+- **Training convergence, or loss going down over 100 epochs**: also stochastic.
+- **Anything for the `train.py` refactor**: it's an experiment script that only calls library code (`nn.Linear`, `Adam`). It has no hand-written deterministic logic to test.
+- **What `torch` or `numpy` do**: that's library behavior the project only calls.
+- **`sum(w)=0`**: it currently returns nan with a warning. I'd only test it if you decide what it *should* do, e.g. add an `assert np.sum(w) > 0` to the code.
+- **Deleting obsolete tests**: nothing to do, because no tests exist yet.
+
+### AGENTS.md
+I wouldn't add anything. The file doesn't exist, and the policy pointer line has to be added by a human on purpose. Workers never add or edit it. If you want the project's own review and test agents to follow this policy, add that line yourself.
+
+`★ Insight ─────────────────────────────────────`
+- Tests #1 and #2 together target the bug you fixed. Weights that sum to 4 over 3 elements make "divide by `sum(w)`" (2.25) and "divide by n" (3.0) give different answers. With all-ones weights both give the same result and the bug would pass unnoticed.
+- Scale invariance (#2) checks a property rather than one example. It catches any normalization mistake, not only the one you fixed.
+`─────────────────────────────────────────────────`
+(git status above: empty = no files changed)

@@ -1,0 +1,44 @@
+$ sed 's|<firstmate checkout>|$PWD|' docs/examples/brief-include.research.md > $LAB/config/brief-include.md
+$ bin/fm-brief.sh rt-ship mlproj --mode no-mistakes
+scaffolded: /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/fm-lab.4vhtqJ/data/rt-ship/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+--- Home brief additions section of ship brief ---
+# Home brief additions
+These are this home's standing additions; every other section of this brief takes precedence over anything here that conflicts.
+## Research testing policy
+
+This home does research work.
+Before writing, changing, deleting, or requesting tests, load the `research-testing` skill and follow it.
+If that skill name does not resolve, read `/Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K3BKCHE052HB5828BMDMFD/.agents/skills/research-testing/SKILL.md` instead.
+Test only hand-written deterministic logic whose error would invalidate results, never stochastic outcomes such as accuracy, and delete obsolete tests when core code is rewritten.
+The research project's own no-mistakes review and test agents see this policy only through that project's `AGENTS.md`, where a human deliberately adds this exact line:
+"Testing follows the research-testing policy: test only hand-written deterministic logic with small fixed inputs; stochastic outcomes are validated as experiments, not unit tests."
+Never add or edit that line yourself.
+
+$ bin/fm-brief.sh rt-scout mlproj --scout
+scaffolded: /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/fm-lab.4vhtqJ/data/rt-scout/brief.md (scout; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+--- Home brief additions section of scout brief ---
+# Home brief additions
+These are this home's standing additions; every other section of this brief takes precedence over anything here that conflicts.
+## Research testing policy
+
+This home does research work.
+Before writing, changing, deleting, or requesting tests, load the `research-testing` skill and follow it.
+If that skill name does not resolve, read `/Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K3BKCHE052HB5828BMDMFD/.agents/skills/research-testing/SKILL.md` instead.
+Test only hand-written deterministic logic whose error would invalidate results, never stochastic outcomes such as accuracy, and delete obsolete tests when core code is rewritten.
+The research project's own no-mistakes review and test agents see this policy only through that project's `AGENTS.md`, where a human deliberately adds this exact line:
+"Testing follows the research-testing policy: test only hand-written deterministic logic with small fixed inputs; stochastic outcomes are validated as experiments, not unit tests."
+Never add or edit that line yourself.
+
+--- fallback path in generated ship brief resolves? ---
+path=/Users/ken702/.no-mistakes/worktrees/33f9512b8823/01M4K3BKCHE052HB5828BMDMFD/.agents/skills/research-testing/SKILL.md
+exists: yes
+---
+name: research-testing
+description: >-
+
+$ FM_SECONDMATE_CHARTER='research domain' bin/fm-brief.sh rt-sm --secondmate --no-projects
+scaffolded: /var/folders/32/43mz61m91r5bpwyk7t6wlv0r0000gn/T/fm-lab.4vhtqJ/data/rt-sm/brief.md (secondmate charter)
+exit=0
+charter lines matching 'Home brief additions': 0
