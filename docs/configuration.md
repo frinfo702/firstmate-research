@@ -978,6 +978,8 @@ The text is static and never executed or expanded; secondmate charters never tak
 
 `bin/fm-brief.sh`'s header owns the placement rule and its safety argument.
 
+A research home can copy the tracked template [`docs/examples/brief-include.research.md`](examples/brief-include.research.md) to `config/brief-include.md` so every worker brief points at the `research-testing` skill's testing policy.
+
 ## Worker launch environment (config/launch-env-allowlist)
 
 The optional local, gitignored `config/launch-env-allowlist` limits the ambient environment passed to newly launched workers, scouts, and secondmates, including relaunches.
