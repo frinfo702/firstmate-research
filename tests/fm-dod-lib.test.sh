@@ -141,6 +141,51 @@ test_standalone_local_only_needs_project_ref() {
   pass "standalone local-only done: requires the named head in the project clone"
 }
 
+# An experiment never merges, so its pushed branch is its only landing: a head
+# that lives only on the project clone's local branch is not enough, unlike
+# local-only, and a head on a remote-tracking branch is accepted.
+test_experiment_done_requires_a_pushed_head() {
+  local repo wt sha reason rc
+  repo="$TMP_ROOT/experiment-repo"
+  wt="$TMP_ROOT/experiment-wt"
+  fm_git_worktree "$repo" "$wt" fm/exp
+  git -C "$wt" commit -q --allow-empty -m 'experiment run code'
+  sha=$(git -C "$wt" rev-parse HEAD)
+  reason=$(accept_done ship experiment "$wt" "$repo" "done: pushed experiment branch fm/exp")
+  rc=$?
+  [ "$rc" -eq 1 ] || fail "an unpushed experiment done: was accepted on its local branch alone"
+  case "$reason" in
+    *"named head $sha is unreachable outside the worker copy") ;;
+    *) fail "unpushed experiment refusal did not name the commit: $reason" ;;
+  esac
+  git -C "$wt" update-ref refs/remotes/origin/fm/exp "$sha"
+  accept_done ship experiment "$wt" "$repo" "done: pushed experiment branch fm/exp" \
+    || fail "a pushed experiment head was refused"
+  pass "experiment done: requires its head on a remote-tracking branch"
+}
+
+# The experiment contract is rendered from the same owner as every other mode
+# and refuses a forge, because it pushes a plain branch with git.
+test_experiment_dod_block_and_forge_refusal() {
+  local out rc
+  out="$TMP_ROOT/dod-experiment.md"
+  fm_dod_block experiment dod-exp-task > "$out" || fail "experiment DoD did not render"
+  grep -qx "Delivery contract: mode=experiment" "$out" \
+    || fail "experiment DoD lost its machine-readable contract line"
+  assert_grep "done [at=<epoch>]: pushed experiment branch fm/dod-exp-task" "$out" \
+    "experiment DoD lost its done line"
+  assert_grep "$ROOT/.agents/skills/experiment-run/SKILL.md" "$out" \
+    "experiment DoD did not name the experiment-run skill file"
+  assert_no_grep "gh-axi pr" "$out" "experiment DoD asked for a PR"
+  rc=0
+  fm_dod_block experiment dod-exp-task main gerrit >/dev/null 2>&1 || rc=$?
+  [ "$rc" -ne 0 ] || fail "experiment DoD rendered on a Gerrit forge"
+  rc=0
+  fm_ship_rule_one experiment dod-exp-task fm/dod-exp-task gerrit >/dev/null 2>&1 || rc=$?
+  [ "$rc" -ne 0 ] || fail "experiment rule one rendered on a Gerrit forge"
+  pass "experiment DoD renders its push-only contract and refuses a forge"
+}
+
 test_free_text_sha_is_not_the_named_head() {
   local repo wt old new reason rc
   repo="$TMP_ROOT/hex-repo"
@@ -439,6 +484,8 @@ test_keyed_and_spaced_done_lines_are_gated
 test_local_only_linked_branch_is_accepted
 test_local_only_detached_head_is_refused
 test_standalone_local_only_needs_project_ref
+test_experiment_done_requires_a_pushed_head
+test_experiment_dod_block_and_forge_refusal
 test_non_done_lines_are_not_gated
 test_fenced_and_indented_captain_lines_are_not_intent
 test_pr_based_dod_draft_check_uses_gh_axi
