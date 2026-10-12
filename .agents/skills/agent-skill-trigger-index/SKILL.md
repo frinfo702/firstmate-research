@@ -16,8 +16,10 @@ These skills are not captain-invocable; load them only at their precise triggers
 - `diagnostic-reasoning` - load before scoping a reported bug and before acting on a diagnostic report.
 - `research-testing` - load before writing, changing, deleting, or requesting tests in a research project, and before deciding whether a fix, finding, or reproduced bug in research code needs a test.
 - `ask-user-authority` - load before deciding any ask-user finding.
+- `rule-of-one` - load before writing a ship or scout brief, before deciding a validation or review finding, before reviewing or revising a paper or report draft, and whenever a problem outside the current task's one problem or hypothesis is discovered mid-task.
 - `validation-supervision` - load when a ship starts or already has an active no-mistakes validation run, including a mid-run requirement change or finding, and before deciding or answering any ask-user finding.
 - `ship-landing` - load when a ship reports a PR or ready branch, when deciding or monitoring landing, and before task cleanup.
+- `experiment-run` - load before an experiment-mode worker launches, waits on, or concludes a run, and when handling an experiment worker's declared job wait or job-completion wake.
 - `scout-completion` - load when a scout reports completion, presents a visual artifact for iteration, or is being considered for promotion to implementation.
 - `quota-array-dispatch` - load before choosing among a matched crew-dispatch profile array from current quota-axi default TOON.
 - `harness-adapters` - load before spawning or recovering a crewmate or secondmate, handling a trust dialog, sending a harness-specific skill invocation, interrupting or exiting an agent, resuming an exited agent, or verifying a new harness adapter.

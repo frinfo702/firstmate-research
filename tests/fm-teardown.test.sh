@@ -854,6 +854,34 @@ test_no_mistakes_origin_remote_allows() {
   pass "no-mistakes worktree with HEAD on origin is torn down (no regression)"
 }
 
+# An experiment never merges: its pushed branch is its landing, so cleanup
+# proceeds and closes the backlog item with no PR, while an unpushed
+# experiment branch is still refused.
+test_experiment_pushed_branch_cleans_up_without_a_merge() {
+  local case_dir rc
+  case_dir=$(make_case experiment-unpushed)
+  write_meta "$case_dir" experiment ship
+  wt_commit_file "$case_dir" run.txt hello "experiment code, not pushed"
+  set +e
+  run_teardown "$case_dir" > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+  expect_code 1 "$rc" "experiment-unpushed: teardown should refuse"
+  grep -q REFUSED "$case_dir/stderr" || fail "experiment-unpushed: no REFUSED line in stderr"
+
+  case_dir=$(make_case experiment-pushed)
+  write_meta "$case_dir" experiment ship
+  seed_backlog_in_flight "$case_dir"
+  wt_commit_file "$case_dir" run.txt hello "experiment code"
+  git -C "$case_dir/wt" push -q origin fm/task-x1
+  git -C "$case_dir/project" fetch -q origin
+  run_teardown "$case_dir" > "$case_dir/stdout" 2> "$case_dir/stderr" \
+    || fail "experiment-pushed: teardown refused a pushed experiment branch: $(cat "$case_dir/stderr")"
+  [ "$(backlog_row_state "$case_dir")" = "done" ] \
+    || fail "experiment-pushed: the backlog item was not closed: $(backlog_row_state "$case_dir")"
+  pass "experiment branch is cleaned up once pushed, with no merge, and refused while unpushed"
+}
+
 test_no_mistakes_truly_unpushed_refuses() {
   local case_dir rc
   case_dir=$(make_case nm-unpushed)
@@ -4650,6 +4678,7 @@ test_teardown_manual_backend_leaves_the_backlog_to_the_operator
 test_local_only_truly_unpushed_refuses
 test_local_only_merged_to_local_main_allows
 test_no_mistakes_origin_remote_allows
+test_experiment_pushed_branch_cleans_up_without_a_merge
 test_no_mistakes_truly_unpushed_refuses
 test_local_only_force_overrides_unpushed
 test_secondmate_pr_registration_publishes_ready_line

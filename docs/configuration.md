@@ -1064,6 +1064,16 @@ When stripping is enabled, the hooks directory is read-only, so a hook manager r
 The flag is a home-wide attribution choice, so it is inherited into secondmate homes under the [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md) inherited-local-material contract and a secondmate's own workers keep AI trailers too.
 Per-machine Cursor `cli-config.json` attribution-off is not this contract: it does not travel with Firstmate, defaults back to on when unset, and only feeds the CLI's request to the server, so it suppresses the trailer rather than preventing it.
 
+## Experiment delivery mode (data/projects.md `[experiment]`)
+
+`experiment` is a ship delivery mode for research work whose branches are kept as references or thrown away rather than landed.
+Firstmate selects it per task with `--mode experiment` on `bin/fm-brief.sh`, `bin/fm-spawn.sh`, and `bin/fm-promote.sh`, and a project may register it as its standing posture with an `[experiment]` entry in `data/projects.md`.
+The worker commits on its ship branch and pushes that branch to `origin`, with no PR, no merge, and no no-mistakes run, then reports `done [at=<epoch>]: pushed experiment branch <branch>`.
+That report is accepted only when the worker's latest commit is on a remote-tracking branch, and cleanup already treats pushed work as landed, so the task is cleaned up without a merge decision.
+`yolo` has no effect because nothing merges, and an experiment task on a project registered `no-mistakes`, `direct-PR`, or `local-only` prints the spawn's ordinary less-rigor notice.
+The mode takes no forge binding, so a Gerrit-bound project cannot ship it, and remote secondmate provisioning does not accept an `experiment` project yet.
+The worker follows the agent-only `experiment-run` skill for detached job launch, the experiment record at `data/<task-id>/experiment.md`, outputs outside the worktree, and the job-completion wake; [`bin/fm-dod-lib.sh`](../bin/fm-dod-lib.sh) owns the worker's exact definition of done.
+
 ## Project capacity (config/project-capacity)
 
 The optional local, gitignored `config/project-capacity` tells Firstmate how many workers a project can run at once on this machine, for a project whose machine-local resource - a heavy test suite, a local editor stack, a device - only serves a few workers at a time.

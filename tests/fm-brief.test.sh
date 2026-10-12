@@ -199,7 +199,7 @@ test_ship_modes_generate_clean_briefs() {
   home="$TMP_ROOT/ship-home"
   write_registry "$home"
 
-  for id_mode in "brief-nomistakes-a1:no-mistakes" "brief-directpr-a2:direct-PR" "brief-localonly-a3:local-only"; do
+  for id_mode in "brief-nomistakes-a1:no-mistakes" "brief-directpr-a2:direct-PR" "brief-localonly-a3:local-only" "brief-experiment-a7:experiment"; do
     id=${id_mode%%:*}
     mode=${id_mode##*:}
     FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "$id" some-proj --mode "$mode" >/dev/null 2>&1; status=$?
@@ -218,7 +218,7 @@ test_ship_modes_generate_clean_briefs() {
       "$id: brief missing nonterminal working:/setup-complete gate protection"
     assert_no_grep "EOF" "$brief" "$id: brief leaked a heredoc EOF marker (unterminated heredoc)"
   done
-  pass "fm-brief.sh: no-mistakes/direct-PR/local-only briefs generate cleanly"
+  pass "fm-brief.sh: no-mistakes/direct-PR/local-only/experiment briefs generate cleanly"
 }
 
 # A ship task's delivery mode is firstmate's per-task decision, so a missing or
@@ -242,7 +242,7 @@ test_ship_mode_is_required_and_closed_set() {
   done <<'ROWS'
 missing --mode||ship briefs require --mode
 empty --mode value|--mode|requires a value
-unknown mode value|--mode nope|must be one of no-mistakes, direct-PR, local-only
+unknown mode value|--mode nope|must be one of no-mistakes, direct-PR, local-only, experiment
 conditional policy is not a task mode|--mode no-mistakes-prod-only|classify this task's surface
 ROWS
   pass "fm-brief.sh: ship --mode is required and closed-set validated"
@@ -321,6 +321,34 @@ test_faster_paths_use_configured_authority_without_stacked_review() {
   assert_no_grep "pass \`--intent\` as only this brief's \`## Captain's intent\`" "$home/data/$id/brief.md" \
     "direct-PR brief must not include the no-mistakes --intent contract"
   pass "fm-brief.sh: faster paths use configured authority without stacked review"
+}
+
+# An experiment ends at a pushed branch: the brief tells the worker to push it,
+# to load the experiment-run skill, and to stay off the PR and pipeline paths.
+test_experiment_brief_pushes_a_branch_without_pr_or_pipeline() {
+  local home id brief skill out status
+  home="$TMP_ROOT/experiment-home"
+  mkdir -p "$home/data"
+  id="brief-experiment-b1"
+  FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "$id" some-proj --mode experiment >/dev/null 2>&1 \
+    || fail "experiment brief should scaffold"
+  brief="$home/data/$id/brief.md"
+  skill="$ROOT/.agents/skills/experiment-run/SKILL.md"
+  assert_present "$skill" "the experiment-run skill the brief names is missing"
+  assert_grep "Never open or merge a PR" "$brief" "experiment rule 1 did not forbid a PR"
+  assert_grep "git push -u origin fm/$id" "$brief" "experiment brief did not tell the worker to push its branch"
+  assert_grep "done [at=<epoch>]: pushed experiment branch fm/$id" "$brief" "experiment brief lost its done line"
+  assert_grep "Load the \`experiment-run\` skill" "$brief" "experiment brief did not load the experiment-run skill"
+  assert_grep "read \`$skill\` instead" "$brief" "experiment brief did not name the skill file fallback"
+  assert_grep "do NOT run /no-mistakes" "$brief" "experiment brief did not keep the worker off the pipeline"
+  assert_no_grep "no-mistakes doctor" "$brief" "experiment brief still set up the pipeline"
+  assert_no_grep "gh-axi pr" "$brief" "experiment brief still asked for a PR"
+  assert_no_grep "pass \`--intent\` as only this brief's \`## Captain's intent\`" "$brief" \
+    "experiment brief must not include the no-mistakes --intent contract"
+  out=$(FM_HOME="$home" "$ROOT/bin/fm-brief.sh" brief-experiment-b2 some-proj --mode experiment --forge gerrit 2>&1); status=$?
+  [ "$status" -ne 0 ] || fail "an experiment brief accepted a forge"
+  assert_contains "$out" "cannot ship mode=experiment" "the experiment forge refusal did not name the mode"
+  pass "fm-brief.sh: an experiment brief pushes a branch and loads experiment-run, with no PR or pipeline"
 }
 
 # A PR-based ship must not report done on a draft, which cannot be merged; a
@@ -1465,6 +1493,29 @@ test_crewmate_scaffolds_forbid_pool_administration() {
   pass "fm-brief.sh: every crewmate scaffold forbids administering the shared worktree pool"
 }
 
+# Every ship and scout worker must stay on its one problem and hand any other
+# discovered problem back as a follow-up instead of fixing it in passing.
+test_crewmate_scaffolds_carry_rule_of_one() {
+  local home id brief args
+  home="$TMP_ROOT/rule-of-one-home"
+  mkdir -p "$home/data"
+
+  for args in "--mode no-mistakes" "--mode direct-PR" "--mode local-only" "--scout"; do
+    id="brief-one-${args##* }"
+    # shellcheck disable=SC2086 # Each entry is a flag plus its value.
+    FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "$id" alpha $args >/dev/null 2>&1 \
+      || fail "fm-brief.sh $args exited non-zero"
+    brief="$home/data/$id/brief.md"
+    assert_grep "8. Rule of One: this task has exactly one problem or hypothesis" "$brief" \
+      "$args brief did not state the Rule of One"
+    assert_grep "do not fix, test, or investigate it in passing" "$brief" \
+      "$args brief did not forbid fixing another problem in passing"
+    assert_grep "report it as a suggested follow-up" "$brief" \
+      "$args brief did not route another problem to a follow-up"
+  done
+  pass "fm-brief.sh: every ship and scout scaffold carries the Rule of One"
+}
+
 test_script_parses
 test_no_heredoc_in_command_substitution
 test_help_includes_entire_header
@@ -1473,6 +1524,7 @@ test_ship_mode_is_required_and_closed_set
 test_ship_mode_is_explicit_not_registry
 test_delivery_flags_are_refused_where_they_do_not_apply
 test_faster_paths_use_configured_authority_without_stacked_review
+test_experiment_brief_pushes_a_branch_without_pr_or_pipeline
 test_no_mistakes_dod_wording
 test_no_mistakes_dod_green_detection
 test_pr_based_dod_requires_non_draft
@@ -1502,3 +1554,4 @@ test_branch_prefix_is_refused_where_it_does_not_apply
 test_branch_prefix_value_is_validated
 test_branch_prefix_command_is_shell_safe
 test_crewmate_scaffolds_forbid_pool_administration
+test_crewmate_scaffolds_carry_rule_of_one

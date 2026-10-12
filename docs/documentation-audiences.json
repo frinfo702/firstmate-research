@@ -141,6 +141,10 @@
       "audience": "agent-runtime"
     },
     {
+      "path": ".agents/skills/experiment-run/SKILL.md",
+      "audience": "agent-runtime"
+    },
+    {
       "path": ".agents/skills/research-testing/SKILL.md",
       "audience": "agent-runtime"
     },
@@ -566,6 +570,10 @@
     },
     {
       "path": ".agents/skills/operational-home-layout/SKILL.md",
+      "audience": "agent-runtime"
+    },
+    {
+      "path": ".agents/skills/rule-of-one/SKILL.md",
       "audience": "agent-runtime"
     },
     {
